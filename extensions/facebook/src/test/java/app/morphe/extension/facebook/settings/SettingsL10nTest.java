@@ -153,7 +153,7 @@ public class SettingsL10nTest {
     @Test
     public void inEveryShippedLanguageNothingOnTheScreenStaysEnglish() throws Exception {
         String[][] languages = {{"de", "de"}, {"es", "es"}, {"in-rID", "in"}, {"pt-rBR", "pt-rbr"}, {"tr", "tr"},
-                {"zh-rCN", "zh-rcn"}};
+                {"zh-rCN", "zh-rcn"}, {"zh-rTW", "zh-rtw"}};
         for (String[] language : languages) {
             RuntimeEnvironment.setQualifiers("+" + language[0]);
             Map<String, String> table = TranslationsForTests.of(language[1]);
@@ -237,7 +237,7 @@ public class SettingsL10nTest {
         String other = "Set when you patched, so Pause can't turn these off:\n%1$s\nTo rule one out, patch again and "
                 + "leave out its patch.";
         String[][] languages = {{"en", null}, {"de", "de"}, {"es", "es"}, {"in-rID", "in"}, {"pt-rBR", "pt-rbr"},
-                {"tr", "tr"}, {"zh-rCN", "zh-rcn"}};
+                {"tr", "tr"}, {"zh-rCN", "zh-rcn"}, {"zh-rTW", "zh-rtw"}};
         for (String[] language : languages) {
             RuntimeEnvironment.setQualifiers("+" + language[0]);
             Map<String, String> table = language[1] == null ? null : TranslationsForTests.of(language[1]);
@@ -284,7 +284,7 @@ public class SettingsL10nTest {
                 "Disable Audience Network"));
 
         List<String> repeats = new ArrayList<>();
-        for (String language : new String[]{"en", "de", "es", "in-rID", "pt-rBR", "tr", "zh-rCN"}) {
+        for (String language : new String[]{"en", "de", "es", "in-rID", "pt-rBR", "tr", "zh-rCN", "zh-rTW"}) {
             RuntimeEnvironment.setQualifiers("+" + language);
             for (PatchFamily family : PatchFamily.values()) {
                 // An item that is its patch's name has no brackets to repeat it in.
