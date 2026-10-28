@@ -18,6 +18,7 @@ import app.morphe.patches.facebook.misc.extension.facebookExtensionPatch
 import app.morphe.patches.facebook.misc.extension.patchLog
 import app.morphe.patches.facebook.misc.settings.settingsPatch
 import app.morphe.patches.shared.compat.AppCompatibilities
+import app.morphe.util.classDefForEachReferencing
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.Method
@@ -31,6 +32,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstructio
 import com.android.tools.smali.dexlib2.iface.instruction.SwitchPayload
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.WideLiteralInstruction
+import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.iface.reference.StringReference
 import java.io.File
@@ -610,13 +612,9 @@ internal fun isLoggingBloksColourPair(method: Method): Boolean {
 internal fun BytecodePatchContext.hookBloksColourPairs(): Int {
     val parser = standIn(MATERIAL_YOU, PARSE_COLOR)
     val logging = mutableListOf<Method>()
-    val implementers = mutableListOf<String>()
-    classDefForEach { classDef ->
-        if (classDef.type.startsWith(EXTENSION_PACKAGE)) return@classDefForEach
+    classDefForEachReferencing(strings = listOf(BLOKS_PAIR_LIGHT_KEY)) { classDef ->
+        if (classDef.type.startsWith(EXTENSION_PACKAGE)) return@classDefForEachReferencing
         classDef.methods.filterTo(logging, ::isLoggingBloksColourPair)
-        if (classDef.interfaces.isNotEmpty() && classDef.methods.any { it.hasColourPairShape() && it.implementation != null }) {
-            implementers += classDef.type
-        }
     }
     val anchor = logging.singleOrNull()
         ?: error("Found ${logging.size} Bloks colour pair readers that log both keys, expected one")
@@ -625,10 +623,13 @@ internal fun BytecodePatchContext.hookBloksColourPairs(): Int {
     } ?: error("${anchor.definingClass}->${anchor.name} implements no interface that declares it")
     val theme = anchor.parameterTypes.first().toString()
     var changed = 0
-    for (type in implementers) {
-        val model = mutableClassDefBy(type)
-        if (accessor !in model.interfaces) continue
-        val method = model.methods.singleOrNull { it.sameAs(anchor) && it.implementation != null } ?: continue
+    classDefForEachReferencing(types = listOf(accessor)) { classDef ->
+        if (classDef.type.startsWith(EXTENSION_PACKAGE) || accessor !in classDef.interfaces) return@classDefForEachReferencing
+        // Check the interface before decoding methods or making a class mutable. Same-shaped
+        // methods on unrelated models are common, but must not be rewritten or materialized.
+        if (classDef.methods.none { it.hasColourPairShape() && it.implementation != null }) return@classDefForEachReferencing
+        val model = mutableClassDefBy(classDef.type)
+        val method = model.methods.singleOrNull { it.sameAs(anchor) && it.implementation != null } ?: return@classDefForEachReferencing
         check(method.implementation!!.instructions.any { it.asksDark(theme) }) {
             "${method.definingClass}->${method.name} picks a Bloks colour without asking $theme whether it's dark"
         }
@@ -731,23 +732,32 @@ internal const val DARK_BRANCH = "$MATERIAL_YOU->darkBranch(I)I"
  */
 internal fun BytecodePatchContext.readDarkBranchLiterals(darkCheck: String, target: String = DARK_BRANCH): Int {
     val owners = mutableSetOf<String>()
-    classDefForEach { classDef ->
-        if (classDef.type.startsWith(EXTENSION_PACKAGE)) return@classDefForEach
+    classDefForEachReferencing(names = listOf(darkCheck.memberName())) { classDef ->
+        if (classDef.type.startsWith(EXTENSION_PACKAGE)) return@classDefForEachReferencing
         if (classDef.methods.any { it.darkBranchLiterals(darkCheck).isNotEmpty() }) owners += classDef.type
     }
     return owners.sumOf { type -> mutableClassDefBy(type).methods.sumOf { it.readDarkBranchLiterals(darkCheck, target) } }
 }
 
+/** The member name in a `Lclass;->name(...)` or `Lclass;->name:type` reference. */
+private fun String.memberName(): String = substringAfter("->").substringBefore('(').substringBefore(':')
+
+/** Whether this calls [method], a reference as text. The name goes first, so most calls are never written out (#236). */
+private fun Instruction.calls(method: String): Boolean {
+    val call = (this as? ReferenceInstruction)?.reference as? MethodReference ?: return false
+    return call.name == method.memberName() && call.toString() == method
+}
+
 /** The indexes of this method's colour `const`s on [darkCheck]'s dark branch, for [readDarkBranchLiterals]. */
 internal fun Method.darkBranchLiterals(darkCheck: String): List<Int> {
     val instructions = implementation?.instructions?.toList() ?: return emptyList()
-    if (instructions.none { it.referenceText() == darkCheck }) return emptyList()
+    if (instructions.none { it.calls(darkCheck) }) return emptyList()
     val targets = branchTargets(instructions)
     return (0 until instructions.size - 3).filter { index ->
         val result = instructions[index + 1]
         val branch = instructions[index + 2]
         val literal = instructions[index + 3]
-        instructions[index].referenceText() == darkCheck &&
+        instructions[index].calls(darkCheck) &&
             result.opcode == Opcode.MOVE_RESULT && branch.opcode == Opcode.IF_EQZ &&
             (result as OneRegisterInstruction).registerA == (branch as OneRegisterInstruction).registerA &&
             literal.opcode == Opcode.CONST && ((literal as NarrowLiteralInstruction).narrowLiteral ushr 24) == 0xFF &&
@@ -799,8 +809,8 @@ internal fun branchTargets(instructions: List<Instruction>): Set<Int> {
  */
 internal fun BytecodePatchContext.readColourData(): Int {
     val owners = mutableSetOf<String>()
-    classDefForEach { classDef ->
-        if (classDef.type.startsWith(EXTENSION_PACKAGE)) return@classDefForEach
+    classDefForEachReferencing(types = listOf(TYPED_VALUE_DATA.substringBefore("->"))) { classDef ->
+        if (classDef.type.startsWith(EXTENSION_PACKAGE)) return@classDefForEachReferencing
         if (classDef.methods.any { method -> method.implementation?.instructions?.any { it.isColourDataRead() } == true }) {
             owners += classDef.type
         }
@@ -809,7 +819,8 @@ internal fun BytecodePatchContext.readColourData(): Int {
 }
 
 private fun Instruction.isColourDataRead(): Boolean =
-    opcode == Opcode.IGET && referenceText() == TYPED_VALUE_DATA
+    opcode == Opcode.IGET && ((this as ReferenceInstruction).reference as? FieldReference)?.name == "data" &&
+        referenceText() == TYPED_VALUE_DATA
 
 /** [readColourData] for one method. */
 internal fun MutableMethod.readColourData(): Int {

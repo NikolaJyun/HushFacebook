@@ -32,6 +32,7 @@ import app.morphe.extension.shared.SettingsContextRule;
 import app.morphe.extension.shared.diagnostics.FeedFilterCounters;
 import app.morphe.extension.shared.diagnostics.HookStatus;
 import app.morphe.extension.shared.settings.BaseSettings;
+import app.morphe.extension.shared.settings.BooleanSetting;
 import app.morphe.extension.shared.settings.HushfacebookPause;
 import app.morphe.extension.shared.settings.PauseForTests;
 import app.morphe.extension.shared.settings.SettingReadsForTests;
@@ -68,6 +69,10 @@ public class ReelDeclutterTest {
         Settings.HIDE_REEL_SOCIAL_FOOTER.resetToDefault();
         Settings.HIDE_REEL_COUNTS.resetToDefault();
         Settings.HIDE_REEL_SAVE_BUTTON.resetToDefault();
+        Settings.HIDE_REEL_WHATSAPP_BUTTON.resetToDefault();
+        Settings.HIDE_REEL_LIKE_BUTTON.resetToDefault();
+        Settings.HIDE_REEL_COMMENT_BUTTON.resetToDefault();
+        Settings.HIDE_REEL_SHARE_BUTTON.resetToDefault();
         Settings.HIDE_REEL_SOUND_BUTTON.resetToDefault();
         Settings.HIDE_REEL_AUDIO_LINE.resetToDefault();
         Settings.HIDE_SLOW_CONNECTION_MESSAGE.resetToDefault();
@@ -548,7 +553,8 @@ public class ReelDeclutterTest {
     }
 
     /** Stands in for Facebook's icon enum: the sidebar walks one constant per button. */
-    private enum SidebarIcon { LIKE, COMMENT, SHARE, BOOKMARK }
+    private enum SidebarIcon { LIKE, COMMENT, SHARE, BOOKMARK, APP_WHATSAPP, APP_WHATSAPP_BUSINESS,
+        APP_WHATSAPP_STATUS, DOWNLOAD, MORE }
 
     /** Not an enum, though its text is Save's name. */
     private static final String SAVE_AS_TEXT = "BOOKMARK";
@@ -568,6 +574,7 @@ public class ReelDeclutterTest {
         assertFalse("Like went", ReelDeclutter.hideSidebarButton(SidebarIcon.LIKE));
         assertFalse("Comment went", ReelDeclutter.hideSidebarButton(SidebarIcon.COMMENT));
         assertFalse("Share went", ReelDeclutter.hideSidebarButton(SidebarIcon.SHARE));
+        assertFalse("WhatsApp went with Save", ReelDeclutter.hideSidebarButton(SidebarIcon.APP_WHATSAPP));
         assertFalse("a missing type was skipped", ReelDeclutter.hideSidebarButton(null));
         assertFalse("a string was taken for the enum", ReelDeclutter.hideSidebarButton(SAVE_AS_TEXT));
         assertTrue(ReelDeclutter.hideSidebarButton(SidebarIcon.BOOKMARK));
@@ -577,6 +584,86 @@ public class ReelDeclutterTest {
 
         Settings.HIDE_REEL_SAVE_BUTTON.save(false);
         assertFalse("turning the switch off didn't bring Save back", ReelDeclutter.hideSidebarButton(SidebarIcon.BOOKMARK));
+    }
+
+    @Test
+    public void onlyTheDirectWhatsAppTypeIsSkippedByItsSwitch() {
+        assertFalse(Settings.HIDE_REEL_WHATSAPP_BUTTON.defaultValue);
+        assertFalse(ReelDeclutter.hideSidebarButton(SidebarIcon.APP_WHATSAPP));
+        Settings.HIDE_REEL_WHATSAPP_BUTTON.save(true);
+        for (SidebarIcon icon : SidebarIcon.values()) {
+            assertEquals(icon.name(), icon == SidebarIcon.APP_WHATSAPP, ReelDeclutter.hideSidebarButton(icon));
+        }
+        assertFalse(ReelDeclutter.hideSidebarButton("APP_WHATSAPP"));
+        assertFalse(ReelDeclutter.hideSidebarButton(null));
+        assertEquals(ReelDeclutter.SIDEBAR_ROUTE + ": 1 lists, 1 items, 1 removed. Last reason: " + ReelDeclutter.WHATSAPP_BUTTON
+                + ". Removed: " + ReelDeclutter.WHATSAPP_BUTTON + " 1. Kinds: " + ReelDeclutter.WHATSAPP_BUTTON + " 1",
+                line(ReelDeclutter.SIDEBAR_ROUTE));
+        Settings.HIDE_REEL_WHATSAPP_BUTTON.save(false);
+        assertFalse("off did not restore the direct button", ReelDeclutter.hideSidebarButton(SidebarIcon.APP_WHATSAPP));
+        Settings.HIDE_REEL_SAVE_BUTTON.save(true);
+        assertFalse("Save's switch hid WhatsApp", ReelDeclutter.hideSidebarButton(SidebarIcon.APP_WHATSAPP));
+    }
+
+    @Test
+    public void pausedOrNotReadyWhatsAppIsBuilt() {
+        Settings.HIDE_REEL_WHATSAPP_BUTTON.save(true);
+        for (HushfacebookPause.Reason why : new HushfacebookPause.Reason[]{
+                HushfacebookPause.Reason.SWITCH, HushfacebookPause.Reason.CRASH_LOOP,
+                HushfacebookPause.Reason.MARKER_FILE}) {
+            PauseForTests.pause(why);
+            assertFalse(why + " skipped WhatsApp", ReelDeclutter.hideSidebarButton(SidebarIcon.APP_WHATSAPP));
+            PauseForTests.resume();
+        }
+        SettingsContextRule.withoutContext(() -> assertFalse(ReelDeclutter.hideSidebarButton(SidebarIcon.APP_WHATSAPP)));
+        assertTrue(ReelDeclutter.hideSidebarButton(SidebarIcon.APP_WHATSAPP));
+    }
+
+    @Test
+    public void anUnreadableWhatsAppSwitchBuildsTheButtonAndNamesItsOwnHook() {
+        SettingReadsForTests.breakReads(Settings.HIDE_REEL_WHATSAPP_BUTTON);
+        try {
+            assertFalse(ReelDeclutter.hideSidebarButton(SidebarIcon.APP_WHATSAPP));
+        } finally {
+            SettingReadsForTests.mend(Settings.HIDE_REEL_WHATSAPP_BUTTON);
+        }
+        assertEquals(Arrays.asList("a working '" + ReelDeclutter.WHATSAPP_BUTTON + "' hook (it threw "
+                + NullPointerException.class.getName() + ")"), HookStatus.missing(FamilyNames.REEL_DECLUTTER));
+    }
+
+    @Test
+    public void likeCommentAndShareEachHaveTheirOwnSwitch() {
+        BooleanSetting[] switches = {Settings.HIDE_REEL_LIKE_BUTTON, Settings.HIDE_REEL_COMMENT_BUTTON,
+                Settings.HIDE_REEL_SHARE_BUTTON};
+        SidebarIcon[] icons = {SidebarIcon.LIKE, SidebarIcon.COMMENT, SidebarIcon.SHARE};
+        String[] buttons = {ReelDeclutter.LIKE_BUTTON, ReelDeclutter.COMMENT_BUTTON, ReelDeclutter.SHARE_BUTTON};
+        for (int i = 0; i < switches.length; i++) {
+            assertFalse(switches[i].key, switches[i].defaultValue);
+            assertFalse(switches[i].key, ReelDeclutter.hideSidebarButton(icons[i]));
+            switches[i].save(true);
+            for (SidebarIcon icon : SidebarIcon.values()) {
+                assertEquals(switches[i].key + " " + icon, icon == icons[i], ReelDeclutter.hideSidebarButton(icon));
+            }
+            assertFalse("a string was taken for the enum", ReelDeclutter.hideSidebarButton(icons[i].name()));
+            assertTrue(line(ReelDeclutter.SIDEBAR_ROUTE), line(ReelDeclutter.SIDEBAR_ROUTE).contains("Last reason: " + buttons[i]));
+            PauseForTests.pause(HushfacebookPause.Reason.SWITCH);
+            assertFalse("paused skipped " + icons[i], ReelDeclutter.hideSidebarButton(icons[i]));
+            PauseForTests.resume();
+            switches[i].save(false);
+            assertFalse("off did not bring " + icons[i] + " back", ReelDeclutter.hideSidebarButton(icons[i]));
+        }
+    }
+
+    @Test
+    public void anUnreadableLikeSwitchBuildsTheButtonAndNamesItsOwnHook() {
+        SettingReadsForTests.breakReads(Settings.HIDE_REEL_LIKE_BUTTON);
+        try {
+            assertFalse(ReelDeclutter.hideSidebarButton(SidebarIcon.LIKE));
+        } finally {
+            SettingReadsForTests.mend(Settings.HIDE_REEL_LIKE_BUTTON);
+        }
+        assertEquals(Arrays.asList("a working '" + ReelDeclutter.LIKE_BUTTON + "' hook (it threw "
+                + NullPointerException.class.getName() + ")"), HookStatus.missing(FamilyNames.REEL_DECLUTTER));
     }
 
     @Test

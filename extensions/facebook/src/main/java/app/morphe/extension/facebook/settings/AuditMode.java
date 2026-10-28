@@ -81,6 +81,7 @@ public final class AuditMode {
             Settings.HIDE_LINK_POSTS,
             Settings.HIDE_BACKGROUND_POSTS,
             Settings.HIDE_REPOSTS,
+            Settings.HIDE_PAGE_POSTS,
             Settings.HIDE_SEEN_POSTS));
 
     private AuditMode() {
@@ -137,14 +138,32 @@ public final class AuditMode {
         }
     }
 
-    /** Records the page actually attached by settings navigation, with its displayed title. */
+    /** Keeps acknowledgments from older callers readable without claiming accordion proof. */
     static void pageShown(Context context, String route, CharSequence title) {
+        recordPage(context, route, title, null, 0);
+    }
+
+    /** Records the revealed section and its actual child rows after navigation has laid it out. */
+    static void pageShown(Context context, String route, CharSequence title,
+                          List<String> expandedSections, int sectionRows) {
+        recordPage(context, route, title, expandedSections, sectionRows);
+    }
+
+    private static void recordPage(Context context, String route, CharSequence title,
+                                   @Nullable List<String> expandedSections, int sectionRows) {
         File folder = folder(context);
         if (folder == null) return;
         try {
-            write(new File(folder, "page.json"), new JSONObject().put("schema", 2)
+            JSONObject record = new JSONObject().put("schema", expandedSections == null ? 2 : 3)
                     .put("route", route).put("title", title.toString())
-                    .put("locale", L10n.locale(context).toLanguageTag()).toString());
+                    .put("locale", L10n.locale(context).toLanguageTag())
+                    .put("localeTags", new JSONArray(L10n.tags(context)));
+            if (expandedSections != null) {
+                record.put("expandedSections", new JSONArray(expandedSections))
+                        .put("sectionRows", sectionRows)
+                        .put("targetExpanded", !route.isEmpty() && expandedSections.contains(route));
+            }
+            write(new File(folder, "page.json"), record.toString());
         } catch (Throwable failure) {
             Logger.printException(() -> "Audit: could not record the displayed page", failure);
         }

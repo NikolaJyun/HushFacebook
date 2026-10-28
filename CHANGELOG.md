@@ -2,9 +2,100 @@
 
 Changes in each Hushfacebook version, newest first.
 
+## 0.19.0 (2026-10-27)
+
+* **Facebook:** This one needs Morphe Manager 2.2.0 or newer, so update Manager before you patch. Posts can get Save and Download buttons under them, and new switches take Like, Comment, Share or Send off posts and reels, hide posts from Pages or drop the dislike on comments. Feed videos can get a cast button, downloads can go to an SD card, and 32-bit phones work now. You can also pick your own badge and logo colors, sort reels by most liked and copy a reel's whole caption.
+
+### Added
+
+* **Facebook:** New `Badge and logo colors` lets you pick your own color for the red count badges on the tabs and for the blue Facebook logo at the top of Home. Type a color code like #2ECC71 in `Badge color` or `Logo color` under Appearance and restart Facebook. Left blank, both keep Facebook's colors, and settings backups carry them (Refs #263).
+* **Facebook:** Facebook 584.0.0.51.56 now works on 32-bit phones too. The armeabi-v7a Android 11+ bundle, build 475817404, is declared next to the arm64 build 475817393, and every patch applies to it. Contributed by toidicakhia (Refs #254).
+* **Facebook:** `Hide the Create button` under Tabs and navigation takes the + button for new posts, reels and stories out of the top bar, on both versions of the bar Facebook hands out. It starts off and shows after a restart (Refs #257).
+* **Facebook:** A reel's More menu has `Copy caption` now. It copies the whole caption, including the part hidden behind See more, so there's no more screenshotting a long caption to get its text. It's on by default, and `Copy reel captions` under Reels and Watch turns it off (Refs #240).
+* **Facebook:** You can pick a plain home screen icon when you patch. The `Icon style` option of Hushfacebook settings in Morphe draws Facebook's "f" white on black or black on white, and `Facebook colors` (the default) leaves the icon alone. Themed icons on Android 13 and up still work with either one (Refs #278).
+* **Facebook:** New `Show full post text` puts a long post's whole text in the feed, so there's no See more to tap. It starts off. Turn it on under News feed in Hushfacebook's settings, and the diagnostic report counts each post it kept whole (Refs #268).
+* **Facebook:** Downloads can go to an SD card. Pick it in `Save on`, right above `Save to` under Downloads, and videos and photos land on the card in the same folders they'd use on the phone. The phone's storage stays the default. If the card is out of the phone, saves go to the phone's storage until you put it back, so a save never fails over a missing card (Refs #274).
+* **Facebook:** Reels can pause while you read their comments. Turn on `Pause reels while comments are open` under Comments and writing, and a playing reel stops when its comments open and picks up from the same spot when you close them. A reel you start yourself under the comments keeps playing (Refs #266).
+* **Facebook:** `Words to hide` and `Words that keep a post` have a test box under the list now. Paste a post's text and it says whether that post would hide or stay, and which list decided, using the list as you've typed it so far, before you tap Save. Nothing you paste gets saved, and only its first 16,384 characters are checked.
+* **Facebook:** `Newest reels first` is called `Sort loaded reels` now, and a `Reels order` row right under it picks how: `Newest` (the old behavior and still the default) or `Most liked`. It still only reorders the reels Facebook has already loaded for you. A reel without the count it's sorted by keeps Facebook's spot for it. Search finds the switch by its old name too, and settings backups carry the order (Refs #134).
+* **Facebook:** Feed videos can get a cast button. Facebook took its own casting out, so `Cast button on feed videos` under Video and audio puts a button in the video's top right corner that hands it to a casting app you already have, like Web Video Caster, and that app sends it to your TV. It starts off and needs a build with the video download patch. If the video hasn't loaded a file yet, it says so and asks you to play it for a moment first (Refs #182).
+* **Facebook:** Posts can have Save and Download buttons under them now, next to Like, Comment and Share. `Save button under posts` adds Facebook's own Save button, filled bookmark and all. `Download button under posts` adds a Download button to posts with a video or photos, and it saves them the same way the post's menu does (an album saves every photo). Both are under News feed and start off. Download needs a build with the video or photo download patch, and posts with nothing to save don't get the button. Right below them, `Hide Like under posts`, `Hide Comment under posts`, `Hide Share under posts` and `Hide Send under posts` each take one button out of that row in the feed. Reels get the same under Reels and Watch: `Hide Like on reels`, `Hide Comment on reels` and `Hide Share on reels` take that button off the side of a reel, next to the Save and WhatsApp switches that were already there (Refs #151, Refs #265).
+* **Facebook:** `Hide dislike on comments` under Comments and writing takes the thumbs-down off comments, the one Facebook puts next to Like on reels and videos. Like and Reply stay. It starts off (Refs #241).
+* **Facebook:** `Hide posts from Pages` under News feed takes posts written by Pages out of the feed, the Pages you follow included. Friends' and group posts stay, and so does a friend's share of a Page's post. It starts off (Refs #262).
+
+### Changed
+
+* **Facebook:** You need Morphe Manager 2.2.0 or newer now. The patches are built on Morphe patcher 2.0.1, which uses less memory while patching, and older Managers refuse a bundle built on it, so update Manager first. Desktop patching needs morphe-desktop 1.19.1 or newer.
+* **Facebook:** Hush titles are drawn in Facebook's blues now, shifting slowly with a light sheen moving across. That covers the settings bar and search, Hush dialogs, the screen shown when settings can't open, and the lock cover. Every color stays readable on its background in every theme, and the titles keep moving even with Android's animations off.
+* **Facebook:** Long sections are easier to scan. News feed, Reels and Watch, Video and audio, Appearance and Pause, backup and diagnostics group their rows under small headings like `Content filters`, `Video quality` and `Troubleshooting`, still right on the main page. Where the tab bar sits, what it does while you scroll, which tabs hide and their dots all moved to a new Tabs and navigation section. `Tab bar position` and `Tab bar while scrolling` are each one pick from three now, with Facebook's own behavior first, so the two old switches can't fight each other.
+* **Facebook:** A few names got clearer. Playback is Video and audio, Links is Links and sharing, Chats is Chats and Messenger, and Set when you patched is Built-in changes. Writing joined Comments, and the quality row reads `Default quality`. Search still finds everything by its old name. `Save crashes to Downloads` moved from Privacy to Troubleshooting, right above Pause, and Support keeps help and restart apart from supporting the project.
+* **Facebook:** `Hide posts with words you choose` now reads a shared link's headline and the line under it too, so a news post whose only mention of a word is in its link preview hides. That includes the newer cards Facebook draws from its own layout, where the headline isn't a plain field. A keep word on the preview still keeps the post (Refs #255).
+* **Facebook:** The `Only from a reel's More menu` description says which reels get the Picture-in-picture row. Upright reels do, wide ones never did, and the old wording made a missing row look like a bug (Refs #252).
+* **Facebook:** Patching with `Material You theme` on is faster. Its scans now skip the parts of Facebook they can't change, and the patched app comes out the same as before (Refs #236).
+* **Facebook:** The README now explains how to go back to an earlier release that lists your Facebook version. You add its bundle as a local source in Manager, patch with the same key and install over your copy. Sign-in and settings stay, and the README lists what `Export settings` leaves out. The steps follow Manager 2.2's own screens and cover what to do when Manager reports a Package conflict instead of installing.
+* **Facebook:** `Accent color` works with the Material You theme now. It used to sit greyed out whenever Material You was patched in. Now the color you pick replaces your wallpaper's accent and the wallpaper's greys stay, while the first choice, `Wallpaper accent`, keeps the phone's own. It's picked in Hushfacebook's settings under Appearance with no repatch, and Facebook picks it up after a restart (Refs #272).
+
+### Fixed
+
+* **Facebook:** With `See-through bars` on, a blurred strip no longer hangs above the bottom tab bar while it slides away or comes back. The blur used to spread past the bar's edge whenever the bar was partly faded (Refs #250, #124).
+* **Facebook:** With `Picture-in-picture` off, reels no longer shrink into a floating window when you leave Facebook. Some accounts get Facebook's own version of that window, switched on from Facebook's side or from its Media settings, and it used to slip past the switch (Refs #252, #256).
+* **Facebook:** With `Open feed videos on their own` on, a regular video post in your feed (one that isn't a reel) starts as fast as it does with the switch off. That now includes video posts you open from inside a group. Their full screen viewer used to sit on a blank loading screen first, for up to a second on the home feed and two seconds or more in a group. Reels you open from the feed still play alone with nothing after them (Refs #237).
+* **Tooling:** A device walk no longer fails a page because something an earlier step left open is sitting on top of it. On the S22 the long press on a reel left a comment sheet over the next page, and the Notifications step failed on two walks in a row. When a page can't be confirmed, the walk now presses Back once and opens the link again. Checked in the audit's tests.
+* **Tooling:** The device walk reads the phone's screen text as UTF-8. Started from Git Bash, it read it in the console's old code page, so the curly apostrophe in a notification's settings button never matched and the Notifications step failed on a page that was right there. Checked in the audit's tests.
+* **Facebook:** With `Tap to play` on, a video you open from a comment plays in Facebook's full screen player again. It used to sit paused there until you left Facebook and came back (Refs #242).
+* **Tooling:** Device audits read their settings snapshots in Windows PowerShell too, so the push check no longer fails every restore case where git can't find pwsh.
+* **Tooling:** The source audit reads the Morphe Patch Tracker in Windows PowerShell too. The tracker now lists two bundles whose names differ only by capital letters, and when git couldn't find pwsh the push check stopped on it.
+
+## 0.18.1 (2026-10-26)
+
+* **Facebook:** Settings are easier to get around now. Every section opens right on the main page, the rows are more compact, and Pause sits in the top bar. Feed videos can get their own play button, and new switches hide the comments under feed posts or the WhatsApp button on reels. Settings also come in Traditional Chinese. If Facebook crashed at startup for you with `Newest reels first` on, that's fixed too.
+
+### Added
+
+* **Facebook:** `Inline feed video controls` adds a play/pause button to feed videos, so playback can stay in the feed. It starts off under Playback. Tapping the video itself still opens it full screen (Refs #239).
+* **Facebook:** `Hide WhatsApp on reels` removes the direct WhatsApp button beside reels and videos. It starts off and leaves WhatsApp in the Share menu (Refs #243).
+* **Facebook:** `Hide comments under posts` stops feed posts from showing a few comments under their Like, Comment and Share buttons. Tapping Comment still opens them all, and the quick reply box stays. It starts off under Comments (Refs #253).
+* **Facebook:** Settings now include Traditional Chinese (Taiwan), contributed by JhouHank. When a phone's language names a Chinese script and a country that disagree, the script wins, so Traditional and Simplified text don't get mixed up (Refs #227).
+* **Facebook:** `Download button on reels` now has its own switch under Reels and Watch. Turn it off to keep Download in More without the sidebar button. It starts on, so the existing layout stays. Checked on an emulator, including a menu save opened in Photos and the main Download switch off (Refs #244).
+
+### Changed
+
+* **Facebook:** Every settings section now expands beneath its heading on the main page. Several can stay open, and tapping a heading again collapses it. Your open sections and scroll position come back after you clear a search, rotate the screen or restart from settings.
+* **Facebook:** Settings use compact, full-width rows and a smaller header. Pause moves to the top bar, with reports and restart under Support. The overview no longer shows the active-status card or Quick setups.
+
+### Fixed
+
+* **Tooling:** Playback log checks no longer mistake a timestamp for a video speed.
+* **Facebook:** Settings imports now update restart notices, including removing a notice when an import restores the value Facebook is already using. Edits made while an import runs stay consistent with the saved choices.
+* **Facebook:** Word filters recheck the space shared by both lists when you save or import. A preview or another open editor can no longer leave you with lists that won't import again.
+* **Facebook:** A retired unlock prompt can't cancel a newer prompt or replace its feedback.
+* **Facebook:** The Unlock button uses the lock screen's theme, keeping its text readable and its touch target intact when Facebook uses a different theme.
+* **Facebook:** Repeated taps open one settings screen. The last enabled way into settings stays protected after other switches change.
+* **Facebook:** Back to defaults updates launcher shortcuts straight away, while keeping Facebook's own shortcuts.
+* **Facebook:** Canceling a photo in Save all photos also stops the remaining photos.
+* **Facebook:** Photo, Story and GIF saves skip details Facebook has already released, including details nested inside a live post. Menu bookmarks use the same guard.
+* **Facebook:** Video joins stop copying samples before they exceed their size or storage allowance. The MP4 writer checks the complete output size before writing.
+* **Facebook:** Update checks enforce their time limit when response headers or the end of the body arrive late.
+* **Tooling:** Fixture checks validate fingerprint uniqueness. Release receipts reject older retained runs that don't prove validation was enabled.
+* **Tooling:** Generated-file cleanup refuses paths through linked parent folders. Invalid CVSS vectors can't lower an advisory's score by repeating metrics.
+* **Tooling:** Overlapping device builds can't replace each other's argument files or outputs. Invalid patch options keep the previous signed APK.
+* **Tooling:** Retrying publication after an interrupted download check verifies the existing release's files without uploading them again. Drafts and failed lookups stop the retry.
+* **Tooling:** Device checks distinguish Facebook from a separately installed clone. The full audit checks for crashes after settings screenshots and recovery, too.
+* **Tooling:** Device log reads fail promptly after a disconnect. Walks and bytecode checks still attempt cleanup and report recovery errors.
+* **Tooling:** DASH test inputs are corrected, so the full suite reaches the intended cancellation and cleanup checks under the output limits.
+* **Tooling:** Device walks can scroll a navigation row below a caller's reserved screen area before tapping it. A fresh screen check still has to identify one target.
+* **Tooling:** Reel destination checks read the current Facebook activity directly, so another app's stalled diagnostic can't hide the viewer from the walk.
+* **Tooling:** Locale checks follow the app's language preference order, including its English fallback. The requested configuration and displayed page still have to match.
+* **Tooling:** Photo download and optional theme patches inspect fewer classes and skip unrelated call names. A full Facebook 584 comparison found the same hook sites. The earlier one-minute result on a phone used the recommended selection. Optional themes and other phones can take longer (Refs #236).
+* **Facebook:** A Story that reshares a Reel uses `Save video` for its main save option. It skips video details Facebook has already released, and the new label follows Facebook's language. Tests cover it against the real Facebook build, but it hasn't been tried on a live reshared Story yet (Refs #207).
+* **Facebook:** Crash files now identify the Facebook build and the patch bundle that produced them, even if settings won't open. They also include architecture details.
+* **Facebook:** Clearing Recently watched now discards pending watches, so an entry can't come back after Clear. Turning recording off also cancels pending entries, even if you turn it back on straight away.
+* **Facebook:** Facebook no longer crashes at startup with `Newest reels first` on when some reels haven't finished loading their details. Those reels keep Facebook's order and the rest still go newest first. Checked on a phone that crashed every launch before the fix (Refs #234, #246).
+* **Facebook:** `Tap anywhere on View more replies` now also covers the `View more replies` row with the down arrow at the end of an open reply thread. Before, it only reached the `View x replies` rows (Refs #219).
+
 ## 0.18.0 (2026-10-24)
 
-* **Facebook:** Patching on a phone takes about a minute now, down from three. Reels get a 10 second skip when you double tap either edge, and a tap shows their controls without pausing. Hold a feed video for 2x, pinch a story or a profile photo to zoom, and pick your own background color for dark or light mode. You can also put your own words or a picture at the top of Home, save a GIF from a comment, and hide profile notes or the Related posts list. Reel captions keep the bottoms of their letters again too.
+* **Facebook:** With the recommended patches, a phone patch took about a minute in testing, down from three. Reels get a 10 second skip when you double tap either edge, and a tap shows their controls without pausing. Hold a feed video for 2x, pinch a story or a profile photo to zoom, and pick your own background color for dark or light mode. You can also put your own words or a picture at the top of Home, save a GIF from a comment, and hide profile notes or the Related posts list. Reel captions keep the bottoms of their letters again too.
 
 ### Added
 
@@ -48,7 +139,7 @@ Changes in each Hushfacebook version, newest first.
 
 ### Changed
 
-* **Facebook:** Patching takes about a third of the time on a phone. Most patches used to read through all 215,000 of Facebook's classes to find the few they change, dozens of full passes in one patch. Now a single pass at the start notes what each class refers to, and a patch only reads the classes that mention what it's looking for. With the recommended patches on Facebook 584, a patch in Morphe Manager on a phone went from a little over 3 minutes on 0.17.0 to just under 1 minute, and on a desktop held to two cores from 54 seconds to 28. It still fits in the memory it needed before, and the patched app comes out the same as before, class for class (issue #216, reported by @AbdulrahmanAlamodi).
+* **Facebook:** The recommended patches took about a third of the time on the tested phone. Most patches used to read through all 215,000 of Facebook's classes to find the few they change, dozens of full passes in one patch. Now a single pass at the start notes what each class refers to, and a patch only reads the classes that mention what it's looking for. With the recommended patches on Facebook 584, a patch in Morphe Manager on a phone went from a little over 3 minutes on 0.17.0 to just under 1 minute, and on a desktop held to two cores from 54 seconds to 28. It still fits in the memory it needed before, and the patched app comes out the same as before, class for class (issue #216, reported by @AbdulrahmanAlamodi).
 * **Facebook:** `Use the system font` patches faster. It used to read through Facebook's code four separate times to find the places it changes, and it built the full name of every call and field along the way. It now makes one pass and only builds a name when the class matches one it cares about. On Facebook 584 with the recommended patches, `Use the system font` went from about 5.9 seconds to 1.5, and the whole patch from 51 seconds to 45 on a desktop. It still changes the same places in Facebook (issue #216, reported by @AbdulrahmanAlamodi).
 * **Tooling:** A push or a fixture check with a morphe-desktop CLI on the wrong patcher stops right away now. The 0.17.0 push ran its whole 17-minute gate with an old 1.18.1 CLI still set in the shell and only failed at the last step, because a bundle built on the 2.0 patcher won't load in a 1.x CLI. `scripts/pre-push.ps1` and `scripts/verify-all-patches.ps1` read which patcher the jar carries before anything heavy runs, and the message names the jar, both versions and, when it applies, the newer jar your user settings already point to.
 

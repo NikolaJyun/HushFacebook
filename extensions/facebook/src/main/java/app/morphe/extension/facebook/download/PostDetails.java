@@ -277,6 +277,20 @@ public final class PostDetails {
         return time(tree(edge, field), CREATION_TIME);
     }
 
+    /**
+     * The whole number [model] holds in its [field], or -1 when [model] isn't live, has no value
+     * there, or the read fails. Public for Newest reels first, which reads a reel's like and play
+     * counts this way.
+     */
+    public static long count(Object model, int field) {
+        if (!isLiveTree(model)) return -1;
+        // A tree answers 0 for a number it never got, so ask first when it can say.
+        Object has = call(model, "hasFieldValue", field);
+        if (Boolean.FALSE.equals(has)) return -1;
+        Object value = call(model, "getIntValue", field);
+        return value instanceof Integer && (Integer) value >= 0 ? (Integer) value : -1;
+    }
+
     private static long time(Object model, int field) {
         if (!isLiveTree(model)) return 0;
         Object value = call(model, "getTimeValue", field);
@@ -285,7 +299,7 @@ public final class PostDetails {
 
     /** The kept accessor [name] of [model] for [field], or null when the model has none or it fails. */
     static Object call(Object model, String name, int field) {
-        if (model == null) return null;
+        if (model == null || (isTree(model) && !isLiveTree(model))) return null;
         try {
             Method method = model.getClass().getMethod(name, int.class);
             return method.invoke(model, field);
